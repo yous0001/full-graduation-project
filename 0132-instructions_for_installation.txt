@@ -1,0 +1,139 @@
+
+for mobile app:
+
+1- download repo from here :
+  https://github.com/A7mednage71/Reciplore
+2- download flutter framework
+3- open repo code in vs code or android studio
+4- select one ov virtual devices or connect to your real device with usb
+5- flutter pub get
+6- flutter run
+
+and also can try app from this link which i distributed on (this is apk ):
+
+https://appdistribution.firebase.google.com/testerapps/1:833514715472:android:3fc9ba03ddfe9d9d2f9455/releases/4u4irgia8vtkg?utm_source=firebase-console
+
+note : if you want to try Ai features , at first run the api locally
+
+==================================================================================================
+for backend:
+
+1. Clone the Repository
+------------------------
+Run the following command in your terminal:
+
+git clone https://github.com/yous0001/Graduation-Project.git
+cd Graduation-Project
+
+
+2. Install Dependencies
+------------------------
+Make sure you have Node.js and npm installed.
+
+Then run:
+
+npm install
+
+
+3. Create the Environment File
+-------------------------------
+Create a new file named `dev.env` in the root of the project and add the following keys.
+(Do NOT include actual values if you're sharing this file publicly.)
+
+PORT=               # Port number for the server (e.g., 3000)
+
+CONNECTION_URL_LOCAL=      # Local MongoDB connection string
+CONNECTION_URL_DEPLOY=     # Deployed MongoDB connection string
+
+JWT_SECRET_VERFICATION=    # JWT secret for email verification
+TOKEN_PREFIX=accessToken_              # Token prefix (e.g., "Bearer")
+JWT_SECRET_LOGIN=          # JWT secret for login
+JWT_SECRET_refresh=        # JWT secret for refresh tokens
+
+EMAIL=                     # Your email address
+EMAIL_PASSWORD=            # Password or app password for the above email
+
+SALT_ROUNDS=               # Number of salt rounds for bcrypt hashing
+
+Cloud_name=                # Cloudinary cloud name
+API_key=                   # Cloudinary API key
+API_secret=                # Cloudinary API secret
+
+UPLOADS_FOLDER=            # Folder path for uploaded files
+
+HUGGINGFACE_TOKEN=         # Hugging Face token
+HUGGINGFACE_TOKEN1=        # Backup/secondary token
+
+GEMINI_API_KEY1=           # Gemini API key
+
+ACCESS_TOKEN_EXPIRATION=20d  # Access token expiration time
+
+STRIPE_SECRET_KEY=         # Stripe secret key
+
+SUCCESS_URL=http://localhost:5173/payment/sucess
+CANCEL_URL=http://localhost:5173/payment/cancel
+
+CLIENT_URL=http://localhost:5173
+
+
+4. Run the Project
+------------------------
+Run the following command to start the development server:
+
+npm run dev
+
+
+The backend will now be running at:
+http://localhost:3000 (or whatever port you specified)
+
+====================================================================================
+
+
+for Frontend:
+
+1. Clone the Repository
+-------------------------------
+Open your terminal and run:
+
+git clone https://github.com/yous0001/Reciplore-frontend.git
+cd Reciplore-frontend
+
+
+2. Install Dependencies
+-------------------------------
+Make sure you have Node.js and npm installed.
+
+Then run:
+
+npm install
+
+
+3. Create the .env File
+-------------------------------
+In the root of the project, create a file named `.env` with the following content:
+
+VITE_BACKEND_URL=  # e.g., http://localhost:3000
+
+Set this value to the URL of your backend server.
+
+
+4. Run the Development Server
+-------------------------------
+To start the app in development mode, run:
+
+npm run dev
+
+The app will open in your browser at:
+http://localhost:5173
+
+
+5. Optional: Build for Production
+-------------------------------
+To build the optimized production files, run:
+
+npm run build
+
+To preview the production build locally, use:
+
+npm run preview
+
