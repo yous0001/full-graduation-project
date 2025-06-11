@@ -1,4 +1,0 @@
-project:
-https://drive.google.com/file/d/1PTDe_W8mQNIE9-4dg7v54edcAFEM9q_T/view?usp=sharing
-dataset:
-https://www.kaggle.com/datasets/saldenisov/recipenlg
