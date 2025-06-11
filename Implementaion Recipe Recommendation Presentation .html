@@ -1,0 +1,482 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pure Recipe Recommendation Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #e5e7eb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .slideshow-container {
+            width: 960px;
+            height: 540px;
+            position: relative;
+            background: linear-gradient(135deg, #1E3A8A, #3B82F6);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            color: white;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 1.5s ease, transform 1.5s ease;
+        }
+        .slide.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1) translateX(0);
+        }
+        .slide h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            color: #F59E0B;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: slideInLeft 0.7s ease;
+        }
+        .slide ul {
+            list-style-type: none;
+            padding: 20px;
+            font-size: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            margin-right: 270px;
+        }
+        .slide li {
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.7s ease forwards;
+            animation-delay: calc(0.3s * var(--i));
+        }
+        .slide-img {
+            width: 250px;
+            height: 250px;
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: zoomInBounce 0.9s ease;
+        }
+        .code-snippet {
+            background: #1f2937;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #10B981;
+            margin: 10px 0;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 1.5s;
+        }
+        .table-tech {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .table-tech table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-tech th, .table-tech td {
+            padding: 8px;
+            text-align: left;
+        }
+        .flowchart {
+            width: 250px;
+            height: 200px;
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            animation: zoomInBounce 0.9s ease;
+        }
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+        .controls button {
+            background: #F59E0B;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .controls button:hover {
+            background: #10B981;
+            transform: scale(1.1);
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            right: 20px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        .progress {
+            height: 100%;
+            background: #F59E0B;
+            border-radius: 4px;
+            transition: width 1.5s ease;
+        }
+        .icon {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+        @keyframes slideInLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeInUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes zoomInBounce {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slideshow-container">
+        <!-- Slide 1: Implementation Overview -->
+        <div class="slide active">
+            <h1>Implementation Overview</h1>
+            <ul>
+                <li style="--i:1">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Objective: Scalable recipe recommendation system.
+                </li>
+                <li style="--i:2">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M19.5 9.5a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v5h-5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-5h5a1 1 0 0 0 1-1v-3z"/></svg>
+                    Components: Web (React), Mobile (Flutter), Backend (Express.js), AI (Flask).
+                </li>
+                <li style="--i:3">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2a10 10 0 0 0-9 6H2l4 4 4-4H9a8 8 0 1 1 6.32 3.5l-1.41-1.41A6 6 0 1 0 12 4a8 8 0 0 1 8 8h2a10 10 0 0 0-10-10z"/></svg>
+                    Deployment: Vercel (frontend/backend), Heroku (AI).
+                </li>
+                <li style="--i:4">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    Example: Input "tomato, chicken," get pasta recipe.
+                </li>
+            </ul>
+            <img class="slide-img" src="https://via.placeholder.com/250?text=Recipe+App+Interface" alt="App Interface">
+        </div>
+        <!-- Slide 2: Technologies & Tools -->
+        <div class="slide">
+            <h1>Technologies & Tools</h1>
+            <ul>
+                <li style="--i:1">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1-12h2v5h-2zm0 7h2v2h-2z"/></svg>
+                    Frontend: React.js, Tailwind CSS, Vite, Axios.
+                </li>
+                <li style="--i:2">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M7 2v20h10V2H7zm2 2h6v16H9V4z"/></svg>
+                    Mobile: Flutter, Dart, Riverpod, HTTP.
+                </li>
+                <li style="--i:3">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+                    Backend: Express.js, Node.js, MongoDB, JWT.
+                </li>
+                <li style="--i:4">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg>
+                    AI: Flask, Scikit-learn, NLTK, SpaCy.
+                </li>
+            </ul>
+            <div class="table-tech">
+                <table>
+                    <tr><th>Layer</th><th>Tool</th><th>Purpose</th></tr>
+                    <tr><td>Frontend</td><td>React</td><td>Dynamic UI</td></tr>
+                    <tr><td>Mobile</td><td>Flutter</td><td>Cross-platform</td></tr>
+                    <tr><td>Backend</td><td>Express</td><td>API & Logic</td></tr>
+                    <tr><td>AI</td><td>Flask</td><td>Recommendations</td></tr>
+                </table>
+            </div>
+            <img class="slide-img" src="https://via.placeholder.com/250?text=Coding+Screen" alt="Code">
+        </div>
+        <!-- Slide 3: Key System Components -->
+        <div class="slide">
+            <h1>Key System Components</h1>
+            <ul>
+                <li style="--i:1">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.5L18.5 7v8.5L12 18.5l-6.5-3V7L12 4.5z"/></svg>
+                    HomePage (React): Featured recipes, search, filters.
+                </li>
+                <li style="--i:2">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M15.5 3.5a8 8 0 0 0-11 11l8 8 8-8a8 8 0 0 0-5-11zm0 2a6 6 0 0 1 4.5 10L12 19l-8-8a6 6 0 0 1 8.5-8.5 6 6 0 0 1 3 3z"/></svg>
+                    RecipeSearch: By ingredients/preferences.
+                </li>
+                <li style="--i:3">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+                    PantryController: Manages pantry data.
+                </li>
+                <li style="--i:4">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    AIApiBridge: Express to Flask.
+                </li>
+                <li style="--i:5">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg>
+                    FlaskAPI: AI recommendations.
+                </li>
+            </ul>
+            <svg class="flowchart" viewBox="0 0 250 200">
+                <rect x="10" y="10" width="80" height="40" fill="#F59E0B" rx="5"/>
+                <text x="50" y="30" fill="white" font-size="12" text-anchor="middle">React UI</text>
+                <rect x="160" y="10" width="80" height="40" fill="#10B981" rx="5"/>
+                <text x="200" y="30" fill="white" font-size="12" text-anchor="middle">Flutter UI</text>
+                <rect x="85" y="80" width="80" height="40" fill="#3B82F6" rx="5"/>
+                <text x="125" y="100" fill="white" font-size="12" text-anchor="middle">Express.js</text>
+                <rect x="85" y="150" width="80" height="40" fill="#1E3A8A" rx="5"/>
+                <text x="125" y="170" fill="white" font-size="12" text-anchor="middle">Flask AI</text>
+                <path d="M125 50 L125 80" stroke="white" stroke-width="2"/>
+                <path d="M125 120 L125 150" stroke="white" stroke-width="2"/>
+            </svg>
+        </div>
+        <!-- Slide 4: Database Schemas -->
+        <div class="slide">
+            <h1>Database Schemas</h1>
+            <ul>
+                <li style="--i:1">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    User Schema: Credentials, preferences, favorites.
+                </li>
+                <li style="--i:2">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+                    Recipe Schema: Ingredients, instructions, tags.
+                </li>
+                <li style="--i:3">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M7 7h10v10H7V7zm2 2v6h6V9H9z"/></svg>
+                    Ingredient Schema: Data, pricing, stock.
+                </li>
+                <li style="--i:4">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    Purpose: Auth, personalization, AI.
+                </li>
+            </ul>
+            <div class="code-snippet">
+                <pre>
+const userSchema = new mongoose.Schema({
+    username: String,
+    email: String,
+    preferences: [String],
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' }]
+});
+                </pre>
+            </div>
+            <img class="slide-img" src="https://via.placeholder.com/250?text=Database+Diagram" alt="Database">
+        </div>
+        <!-- Slide 5: Challenges & Solutions -->
+        <div class="slide">
+            <h1>Challenges & Solutions</h1>
+            <ul>
+                <li style="--i:1">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-10h-2v2H8v2h2v2h2v-2h2v-2h-2v-2z"/></svg>
+                    CORS: Fixed with Express middleware.
+                </li>
+                <li style="--i:2">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg>
+                    AI Latency: Pickle, Heroku deployment.
+                </li>
+                <li style="--i:3">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M7 2v20h10V2H7zm2 2h6v16H9V4z"/></svg>
+                    Flutter: Riverpod for reactive UI.
+                </li>
+                <li style="--i:4">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+                    Data: NLTK, SpaCy preprocessing.
+                </li>
+                <li style="--i:5">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M8 14c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v6z"/></svg>
+                    Auth: Centralized JWT.
+                </li>
+            </ul>
+            <div class="code-snippet">
+                <pre>
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://app.vercel.app'],
+    credentials: true
+}));
+app.post('/api/recommend', async (req, res) => {
+    const response = await axios.post('http://flask-ai.herokuapp.com/recommend', req.body);
+    res.json(response.data);
+});
+                </pre>
+            </div>
+            <img class="slide-img" src="https://via.placeholder.com/250?text=Code+Challenge" alt="Challenges">
+        </div>
+        <!-- Slide 6: Implementation Results -->
+        <div class="slide">
+            <h1>Implementation Results</h1>
+            <ul>
+                <li style="--i:1">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                    Accuracy: 85% recipe match rate.
+                </li>
+                <li style="--i:2">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg>
+                    Performance: 2s response time.
+                </li>
+                <li style="--i:3">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    Feedback: 4.5/5 (100 testers).
+                </li>
+                <li style="--i:4">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+                    Scalability: 10k concurrent users.
+                </li>
+            </ul>
+            <svg class="flowchart" viewBox="0 0 250 200">
+                <rect x="10" y="10" width="230" height="40" fill="#F59E0B" rx="5"/>
+                <text x="125" y="30" fill="white" font-size="12" text-anchor="middle">Accuracy: 85%</text>
+                <rect x="10" y="60" width="190" height="40" fill="#10B981" rx="5"/>
+                <text x="105" y="80" fill="white" font-size="12" text-anchor="middle">Response: 2s</text>
+                <rect x="10" y="110" width="150" height="40" fill="#3B82F6" rx="5"/>
+                <text x="85" y="130" fill="white" font-size="12" text-anchor="middle">Rating: 4.5/5</text>
+                <rect x="10" y="160" width="110" height="40" fill="#1E3A8A" rx="5"/>
+                <text x="65" y="180" fill="white" font-size="12" text-anchor="middle">Users: 10k</text>
+            </svg>
+        </div>
+        <!-- Slide 7: Conclusion -->
+        <div class="slide">
+            <h1>Conclusion</h1>
+            <ul>
+                <li style="--i:1">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    Implemented with React, Flutter, Express, Flask.
+                </li>
+                <li style="--i:2">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+                    MongoDB: Robust data management.
+                </li>
+                <li style="--i:3">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Deployed: Vercel/Heroku, CI/CD.
+                </li>
+                <li style="--i:4">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-2-6h4v-4h-4v4z"/></svg>
+                    Scalable, user-friendly app.
+                </li>
+                <li style="--i:5">
+                    <svg class="icon" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm1-6h-2v-2h-2v-2h2V8h2v2h2v2h-2v2z"/></svg>
+                    Questions? Let's discuss!
+                </li>
+            </ul>
+            <img class="slide-img" src="https://via.placeholder.com/250?text=Success+Team" alt="Conclusion">
+        </div>
+        <div class="progress-bar">
+            <div class="progress" style="width: 14.28%;"></div>
+        </div>
+        <div class="controls">
+            <button onclick="prevSlide()">Previous</button>
+            <button onclick="nextSlide()">Next</button>
+        </div>
+    </div>
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progress = document.querySelector('.progress');
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                slide.style.transform = i < index ? 'scale(0.9) translateX(-100px)' : 'scale(0.9) translateX(100px)';
+                if (i === index) {
+                    slide.classList.add('active');
+                    slide.style.transform = 'scale(1) translateX(0)';
+                }
+            });
+            progress.style.width = ((index + 1) / totalSlides) * 100 + '%';
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            showSlide(currentSlide);
+        }
+
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+            showSlide(currentSlide);
+        }
+
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
